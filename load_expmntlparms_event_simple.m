@@ -5,7 +5,7 @@ function [am0,am_slope,ampref_max,ampref_min,maxPflood,highrisk,stormfreq,maxdam
     Cmit,miteff,AVGFARMRETURN,STDFARMRETURN,coastvalue,midvalue,...
     inlandvalue,milecost,milestraveled,alpharisk,insurecov,...
     insurecost,timewght,coastpremium,movethresh,mvcost,riskmodel,eumodel,...
-    lclcoeff,altamen,propertytax]=load_expmntlparms_event_simple(EXPTRUNS)
+    lclcoeff,altamen,propertytax,taxflag]=load_expmntlparms_event_simple(EXPTRUNS)
 % Coastal Amenity
 % am0=linspace(200000,800000,EXPTRUNS);
 am0=500000*ones(1,EXPTRUNS);        %baseline
@@ -17,7 +17,9 @@ am_slope=0.08*ones(1,EXPTRUNS);      %baseline, range[0.6,1]
 
 coastpremium=18;    %baseline
 
-propertytax=repmat([0.02 0.01 0.005],EXPTRUNS,1);  %baseline
+taxflag=0;
+% propertytax=repmat([0.01 0.01 0.01],EXPTRUNS,1);  %baseline
+propertytax=repmat([0.02 0.01 0.005],EXPTRUNS,1);
 
 % Consumer preferences
 ampref_max=0.9*ones(1,EXPTRUNS);    %baseline
@@ -39,8 +41,8 @@ lclcoeff=0.5*ones(1,EXPTRUNS);     % baseline; 'local thinker' coefficient for s
 maxPflood=0.7*ones(1,EXPTRUNS);     %baseline
 highrisk=30*ones(1,EXPTRUNS);       %baseline
 maxdam=ones(1,EXPTRUNS);            %baseline
-stormfreq_parms=2*ones(1,EXPTRUNS);         %baseline
-% stormfreq_parms=[1 1 2 2 3 3 4 4];
+% stormfreq_parms=2*ones(1,EXPTRUNS);         %baseline
+stormfreq_parms=[1 2 3 4];
 % stormfreq=reshape(repmat(stormfreq_parms,length(am_slope_parms),1),...
 %     length(am_slope_parms)*length(stormfreq_parms),1)';         
 stormfreq=stormfreq_parms;
@@ -52,7 +54,8 @@ miteff=1;          %baseline
 insurecov=125000*ones(1,EXPTRUNS);    %baseline, max NFIP building coverage, Kousky et al. (2016)
 insurecost=610*ones(1,EXPTRUNS);    %baseline, max premium for properties 2-4 ft above BFE Kousky et al. (2016)
 
-movethresh=0.025*ones(1,EXPTRUNS);
+% movethresh=0.025*ones(1,EXPTRUNS);
+movethresh=0.1*ones(1,EXPTRUNS);
 mvcost=0.1*ones(1,EXPTRUNS);   %baseline, range[0.01,0.25]
 
 % Initial land value

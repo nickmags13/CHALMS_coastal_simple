@@ -4,20 +4,20 @@
 clear
 tic
 
-EXPTRUNS=1;
+EXPTRUNS=4;
 % runset=[20 10 8 12 2 6 4 16 14 18];
 % MRUNS=length(runset);
 MRUNS=1;
 
 rng default
 % poolobj=parpool(min(EXPTRUNS,12));
-% poolobj=parpool(10);
-% addAttachedFiles(poolobj,{'load_expmntlparms_event_simple.m','loadempdata.m',...
-%     'parsave_event_simple.m','distmat.m','load_farmmap.m','load_DIST2CBD_east.m',...
-%     'load_distmat.m','calc_prisk.m','calc_eu.m','calc_react.m','load_ilandscape.m'});
+poolobj=parpool(10);
+addAttachedFiles(poolobj,{'load_expmntlparms_event_simple.m','loadempdata.m',...
+    'parsave_event_simple.m','distmat.m','load_farmmap.m','load_DIST2CBD_east.m',...
+    'load_distmat.m','calc_prisk.m','calc_eu.m','calc_react.m','load_ilandscape.m'});
 
 %%
-for erun=1:EXPTRUNS
+parfor erun=1:EXPTRUNS
 % for ierun=1:length(runset)
 %     erun=runset(ierun);
     rng default
@@ -29,7 +29,7 @@ for erun=1:EXPTRUNS
 %         mrun=runset(imrun);
         rng(mrun)
 %         rndstr=RandStream.getGlobalStream;
-        cd \\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\'My Documents'\Model_Code\simple_chalms
+        cd \\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\'My Documents'\Model_Code\CHALMS_coastal_simple\CHALMS_coastal_simple
 %         rndstr.Substream=mrun;
         
         disp([erun mrun])
@@ -39,7 +39,7 @@ for erun=1:EXPTRUNS
             Cmit,miteff,AVGFARMRETURN,STDFARMRETURN,coastvalue,midvalue,...
             inlandvalue,milecost,milestraveled,alpharisk,insurecov,...
             insurecost,timewght,coastpremium,movethresh,mvcost,riskmodel,...
-            eumodel,lclcoeff,altamen,propertytax]=load_expmntlparms_event_simple(EXPTRUNS);
+            eumodel,lclcoeff,altamen,propertytax,taxflag]=load_expmntlparms_event_simple(EXPTRUNS);
         %<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
         %     % M-files needed to run
         %     1. EmpDataInput_coast_base.m
@@ -63,7 +63,7 @@ for erun=1:EXPTRUNS
         LTYPE=1;
         HT=HTYPE*LTYPE;
         
-        landscapefname='\\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\My Documents\Model_Code\simple_chalms\ilandscape.mat';
+        landscapefname='\\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\My Documents\Model_Code\CHALMS_coastal_simple\CHALMS_coastal_simple\ilandscape.mat';
         Silandscape=load_ilandscape(landscapefname);
         
         %@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -104,7 +104,7 @@ for erun=1:EXPTRUNS
         zeta=0.5;   %dampening on epsilon-- must be >0, controls the rate of price ...
         %increase/preception of market power in land market
         learnDELTA=0.5;
-        TMAX=30;
+        TMAX=40;
         TSTART=10;
         
         %%% Landscape Layer %%%
@@ -175,6 +175,9 @@ for erun=1:EXPTRUNS
         HIBETA=[0.20 0.24];     %approximate max and mins for housepref come from calvert county census data
         MIDBETA=[0.25 0.29];
         LOWBETA=[0.3 0.5];
+%         HIBETA=[0.20 0.5];     %approximate max and mins for housepref come from calvert county census data
+%         MIDBETA=[0.25 0.5];
+%         LOWBETA=[0.3 0.5];
         incomeg=0.05;
         incomesigma=1;
         incomegrow=0.005;
@@ -184,7 +187,7 @@ for erun=1:EXPTRUNS
         popg=0.05;
         popsigma=1;
         pop2dem=2.91;   %persons per household, Calvert County quickfacts
-        POPGROW=0.05;   %ditto (19% actually)
+        POPGROW=0.02;   %ditto (19% actually)
         popurb=0.7;
         popag=0.3;
         
@@ -505,6 +508,7 @@ for erun=1:EXPTRUNS
         Realavgexptret=zeros(HT,TMAX);
         Newbidlevel=zeros(NCELLS,TMAX);
         Avgnewbid=zeros(HT,TMAX);
+        TAXREV=zeros(1,TMAX);
         
         numtotbids=zeros(HT,TMAX);
         htincome=zeros(HT,TMAX);
@@ -561,9 +565,9 @@ for erun=1:EXPTRUNS
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%   Distance matrices   %%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        distfname='\\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\My Documents\Model_Code\simple_chalms\DIST2CBD_east.mat';
+        distfname='\\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\My Documents\Model_Code\CHALMS_coastal_simple\CHALMS_coastal_simple\DIST2CBD_east.mat';
         Sdist2cbd=load_DIST2CBD_east(distfname);
-        farmmapfname='\\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\My Documents\Model_Code\simple_chalms\FARMMAP_grid.mat';
+        farmmapfname='\\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\My Documents\Model_Code\CHALMS_coastal_simple\CHALMS_coastal_simple\FARMMAP_grid.mat';
         Sfarmmap=load_farmmap(farmmapfname);
         
         coastdist=reshape(NWIDTH+1-cumsum(SCAPE,2),NCELLS,1);
@@ -571,9 +575,9 @@ for erun=1:EXPTRUNS
         travelcost(iscapelist)=num2cell(margtc*Sdist2cbd.dist2cbd(iscapelist));
         travelcost(icoast)=num2cell(10000*ones(length(icoast),1));
         coastprox=num2cell(am0(erun)*1./exp(am_slope(erun)*coastdist));
-        currstate=rng;
-        coastprox=num2cell(cat(1,coastprox{randperm(NCELLS)}));
-        rng(currstate);
+%         currstate=rng;
+%         coastprox=num2cell(cat(1,coastprox{randperm(NCELLS)}));
+%         rng(currstate);
         alt_coastprox=altamen(erun)*am0(erun)*1./exp(am_slope(erun)*max(coastdist));
         
         
@@ -1120,7 +1124,7 @@ for erun=1:EXPTRUNS
         brokerabserror(:,:,:,1:TSTART)=learnabserror(:,:,:,tlearn-9:tlearn);
         brokerbestabsSAVE(:,:,1:TSTART)=learnbestabsSAVE(:,:,max(12,tlearn-9):tlearn);
         
-        distfname='\\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\My Documents\Model_Code\simple_chalms\master_dist.mat';
+        distfname='\\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\My Documents\Model_Code\CHALMS_coastal_simple\CHALMS_coastal_simple\master_dist.mat';
         Sdist=load_distmat(distfname);
 %         load master_dist
 
@@ -1155,13 +1159,13 @@ for erun=1:EXPTRUNS
         CONINFO(:,11)=num2cell(cat(1,CONINFO{:,1}).*mvcostpct);
         
         CONINFO(:,3)=num2cell(1-housepref);
-%         CONINFO(:,6)=num2cell((ampref_min(erun)+(ampref_max(erun)-ampref_min(erun))*...
-%             rand(length(housepref),1)).*housepref);
-        CONINFO(:,6)=num2cell(housepref);
+        CONINFO(:,6)=num2cell((ampref_min(erun)+(ampref_max(erun)-ampref_min(erun))*...
+            rand(length(housepref),1)).*housepref);
+%         CONINFO(:,6)=num2cell(housepref);
         CONINFO(:,4)=num2cell(zeros(length(housepref),1));
-        CONINFO(:,5)=num2cell(zeros(length(housepref),1));
+%         CONINFO(:,5)=num2cell(zeros(length(housepref),1));
 %         CONINFO(:,4)=num2cell((housepref-cat(1,CONINFO{:,6})).*(0.1+(0.9-0.1)*rand(length(housepref),1)));
-%         CONINFO(:,5)=num2cell(housepref-(cat(1,CONINFO{:,4})+cat(1,CONINFO{:,6})));
+        CONINFO(:,5)=num2cell(1-(cat(1,CONINFO{:,3})+cat(1,CONINFO{:,6})));
         CONINFO(:,7)=num2cell(ones(length(CONINFO(:,1)),1));
         CONINFO(:,8)=num2cell(zeros(length(CONINFO(:,1)),1));
         
@@ -1177,7 +1181,7 @@ for erun=1:EXPTRUNS
         rng(savedState);
         
         %%% Spin-up housing market, developer learns pricing
-        rentmodelfname='\\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\My Documents\Model_Code\simple_chalms\rentmodel.mat';
+        rentmodelfname='\\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\My Documents\Model_Code\CHALMS_coastal_simple\CHALMS_coastal_simple\rentmodel.mat';
         Srent=load_rentmodel(rentmodelfname);       
 %         load rentmodel
 
@@ -1193,6 +1197,16 @@ for erun=1:EXPTRUNS
 %         end
         
         Paskhouse(Silandscape.istartmap(:,1),1)=Silandscape.startrents(Silandscape.istartmap(:,2));
+%         istartid=Silandscape.istartmap(:,1);
+%         istartind=Silandscape.istartmap(:,2);
+%         testmap2(istartind)=sum(Psevere).*(((mean(cat(1,CONINFO{:,1}))-...
+%             cat(1,travelcost{istartind})-14772.*propertytax(erun,ZONEMAP(istartind))'-...
+%             14772.*(0.01*housedam(istartind))).*mean(cat(1,CONINFO{:,3}))).*...
+%             (AMLEVEL(istartind).^mean(cat(1,CONINFO{:,6}))))+...
+%             (1-sum(Psevere)).*(((mean(cat(1,CONINFO{:,1}))-...
+%             cat(1,travelcost{istartind})-14772.*propertytax(erun,ZONEMAP(istartind))').*...
+%             mean(cat(1,CONINFO{:,3}))).*...
+%             (AMLEVEL(istartind).^mean(cat(1,CONINFO{:,6}))));
         
         deltadiff=zeros(1,[]);
         utildiff=zeros(1,TMAX);
@@ -1281,7 +1295,8 @@ for erun=1:EXPTRUNS
                 paskh=Paskhouse;
                 eumdl=eumodel(erun);
                 lccf=lclcoeff(erun);
-                tax=propertytax(erun,ZONEMAP(cat(1,lotchoice{:,2})));
+                tax=sum(((1/(1+discount)).^(1:30)).*paskh,2).*...
+                    propertytax(erun,ZONEMAP(cat(1,lotchoice{:,2})))';
                 
                 [Upick,eucheck,wtp_pick,eu_base,eu_ins,wtp_base,wtp_ins]=...
                     calc_eu(eumdl,lccf,c_income,c_tc,c_dmg,c_iprate,c_good,...
@@ -1410,13 +1425,17 @@ for erun=1:EXPTRUNS
                             uset(ius)=CONINFO{conset(cs),13}.*...
                                 ((max(CONINFO{conset(cs),1}-travelcost{lotchoice{ilotmatch(ius),2}}-...
                                 subPhousebid(conset(cs),ilotmatch(ius))'-...
+                                subPhousebid(conset(cs),ilotmatch(ius)).*...
+                                propertytax(erun,ZONEMAP(lotchoice{ilotmatch(ius),2}))'-...
                                 Cdam{ilotmatch(ius),TSTART},0).^CONINFO{conset(cs),3}).*...
                                 (Lottype{ilotmatch(ius),4}.^CONINFO{conset(cs),4}).*...
                                 (Lottype{ilotmatch(ius),3}.^CONINFO{conset(cs),5}).*...
                                 (Lottype{ilotmatch(ius),7}.^CONINFO{conset(cs),6}))+...
                                 (1-CONINFO{conset(cs),13}).*...
                                 ((max(CONINFO{conset(cs),1}-travelcost{lotchoice{ilotmatch(ius),2}}-...
-                                subPhousebid(conset(cs),ilotmatch(ius))',0).^CONINFO{conset(cs),3}).*...
+                                subPhousebid(conset(cs),ilotmatch(ius))'-...
+                                subPhousebid(conset(cs),ilotmatch(ius)).*...
+                                propertytax(erun,ZONEMAP(lotchoice{ilotmatch(ius),2}))',0).^CONINFO{conset(cs),3}).*...
                                 (Lottype{ilotmatch(ius),4}.^CONINFO{conset(cs),4}).*...
                                 (Lottype{ilotmatch(ius),3}.^CONINFO{conset(cs),5}).*...
                                 (Lottype{ilotmatch(ius),7}.^CONINFO{conset(cs),6}));
@@ -1424,7 +1443,10 @@ for erun=1:EXPTRUNS
                             % expected utility of insurance
                             uset(ius)=CONINFO{conset(cs),13}.*...
                                 ((max(CONINFO{conset(cs),1}-travelcost{lotchoice{ilotmatch(ius),2}}-...
-                                subPhousebid(conset(cs),ilotmatch(ius))'-Cdam{ilotmatch(ius),TSTART}-...
+                                subPhousebid(conset(cs),ilotmatch(ius))'-...
+                                subPhousebid(conset(cs),ilotmatch(ius)).*...
+                                propertytax(erun,ZONEMAP(lotchoice{ilotmatch(ius),2}))'-...
+                                Cdam{ilotmatch(ius),TSTART}-...
                                 IPrate{ilotmatch(ius),TSTART}-insddct+min(insurecov(erun),...
                                 subPhousebid(conset(cs),ilotmatch(ius))'),0).^CONINFO{conset(cs),3}).*...
                                 (Lottype{ilotmatch(ius),4}.^CONINFO{conset(cs),4}).*...
@@ -1432,7 +1454,10 @@ for erun=1:EXPTRUNS
                                 (Lottype{ilotmatch(ius),7}.^CONINFO{conset(cs),6}))+...
                                 (1-CONINFO{conset(cs),13}).*...
                                 ((max(CONINFO{conset(cs),1}-travelcost{lotchoice{ilotmatch(ius),2}}-...
-                                subPhousebid(conset(cs),ilotmatch(ius))'-IPrate{ilotmatch(ius),TSTART},0).^CONINFO{conset(cs),3}).*...
+                                subPhousebid(conset(cs),ilotmatch(ius))'-...
+                                subPhousebid(conset(cs),ilotmatch(ius)).*...
+                                propertytax(erun,ZONEMAP(lotchoice{ilotmatch(ius),2}))'-...
+                                IPrate{ilotmatch(ius),TSTART},0).^CONINFO{conset(cs),3}).*...
                                 (Lottype{ilotmatch(ius),4}.^CONINFO{conset(cs),4}).*...
                                 (Lottype{ilotmatch(ius),3}.^CONINFO{conset(cs),5}).*...
                                 (Lottype{ilotmatch(ius),7}.^CONINFO{conset(cs),6}));
@@ -1492,6 +1517,8 @@ for erun=1:EXPTRUNS
             lotchoice(istillvac,6)=num2cell(ones(length(istillvac),1)*TSTART+1);
             lotchoice(istillvac,8)=num2cell(zeros(length(istillvac),1));
             
+            TAXREV(TSTART)=sum(sum(((1/(1+discount)).^(1:30)).*cat(1,lotchoice{ifilled,7})).*...
+                propertytax(erun,ZONEMAP(cat(1,lotchoice{ifilled,2})))');
             
             %%%%%%%% Utility check %%%%%%%%%%%
             % realulot=zeros(Nconsumers,3);
@@ -1862,7 +1889,9 @@ for erun=1:EXPTRUNS
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         popinhouse=find(cat(1,CONINFO{:,8})==1);
         ioldpop=find(cat(1,CONINFO{:,8})==0);
-        POP(1:TSTART)=round(length(CONINFO(:,1))./(1+POPGROW).^(TSTART:-1:1));
+%         POP(1:TSTART)=round(length(CONINFO(:,1))./(1+POPGROW).^(TSTART:-1:1));
+        POP(1:TSTART)=round(length(find(cat(1,CONINFO{:,1})~=0))./(1+POPGROW).^(TSTART:-1:1));
+%          POP(1:TSTART)=round(length(lotchoice(:,1))./(1+POPGROW).^(TSTART:-1:1));
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%    Broker Info    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2954,7 +2983,9 @@ for erun=1:EXPTRUNS
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             %%%%%%%%% Add new consumers %%%%%%%%%%
-            newpop=ceil(length(CONINFO(:,1))*POPGROW);
+%             newpop=ceil(length(CONINFO(:,1))*POPGROW);
+            newpop=ceil(length(find(cat(1,CONINFO{:,1})~=0))*POPGROW);
+%             newpop=ceil(length(lotchoice(:,1))*POPGROW);
             inewpop=length(CONINFO(:,1))+1:length(CONINFO(:,1))+newpop;
             % %CONINFO=[income,searchtime,consumer_good,housesize,lotsize,proximity,subrisk,occ/vac,utility]
             CONINFO(inewpop,1)=num2cell(...
@@ -2977,13 +3008,15 @@ for erun=1:EXPTRUNS
             CONINFO(inewpop,11)=num2cell(cat(1,CONINFO{inewpop,1}).*mvcostpct);
             
             CONINFO(inewpop,3)=num2cell(1-housepref(inewpop));
-%             CONINFO(inewpop,6)=num2cell((0.1+(0.9-0.1)*rand(length(housepref(inewpop)),1)).*housepref(inewpop));
-            CONINFO(inewpop,6)=num2cell(housepref(inewpop));
+            CONINFO(inewpop,6)=num2cell((ampref_min(erun)+(ampref_max(erun)-...
+                ampref_min(erun))*rand(length(housepref(inewpop)),1)).*housepref(inewpop));
+%             CONINFO(inewpop,6)=num2cell(housepref(inewpop));
             CONINFO(inewpop,4)=num2cell(zeros(length(inewpop),1));
-            CONINFO(inewpop,5)=num2cell(zeros(length(inewpop),1));
+%             CONINFO(inewpop,5)=num2cell(zeros(length(inewpop),1));
 %             CONINFO(inewpop,4)=num2cell((housepref(inewpop)-cat(1,CONINFO{inewpop,6})).*...
 %                 (0.1+(0.9-0.1)*rand(length(housepref(inewpop)),1)));
-%             CONINFO(inewpop,5)=num2cell(housepref(inewpop)-(cat(1,CONINFO{inewpop,4})+cat(1,CONINFO{inewpop,6})));
+            CONINFO(inewpop,5)=num2cell(1-(cat(1,CONINFO{inewpop,3})+cat(1,CONINFO{inewpop,6})));
+
             CONINFO(inewpop,7)=num2cell(ones(newpop,1));
             CONINFO(inewpop,8)=num2cell(zeros(newpop,1));
             CONINFO(inewpop,9)=num2cell(zeros(newpop,1));
@@ -3102,12 +3135,19 @@ for erun=1:EXPTRUNS
 %                 stormflag=1;
                 eumdl=eumodel(erun);
                 lccf=lclcoeff(erun);
+%                 tax=propertytax(erun,ZONEMAP(cat(1,lotchoice{ilot,2})))';
+%                 vactax=propertytax(erun,ZONEMAP(cat(1,lotchoice{inewlots,2})))';
+                tax=sum(((1/(1+discount)).^(1:30)).*paskh,2).*...
+                    propertytax(erun,ZONEMAP(cat(1,lotchoice{ilot,2})))';
+                vactax=sum(((1/(1+discount)).^(1:30)).*vacpaskh,2).*...
+                    propertytax(erun,ZONEMAP(cat(1,lotchoice{inewlots,2})))';
+                alttax=sum(((1/(1+discount)).^(1:30)).*altpaskh,2).*0.01;
                 
                 [Upick,eucheck,wtp_pick,eu_base,eu_ins,wtp_base,wtp_ins,mvcheck]=...
                     calc_react(eumdl,lccf,c_income,c_tc,c_dmg,c_iprate,c_good,c_hsize,...
                     c_lsize,c_amen,hsize,lsize,amen,c_pstrm,c_npstrm,paskh,icov,discount,...
                     c_mov,vacpaskh,vachsize,vaclsize,vacamen,vactc,vacdmg,altpaskh,...
-                    alt_coastprox,stormflag,ddct);
+                    alt_coastprox,stormflag,ddct,tax,vactax,alttax);
                 
                 wtpcon_base(iocc(c),ilot)=wtp_base;
                 EU_base(iocc(c),ilot)=eu_base;
@@ -3275,7 +3315,9 @@ for erun=1:EXPTRUNS
                 paskh=Paskhouse(inewlots);
                 eumdl=eumodel(erun);
                 lccf=lclcoeff(erun);
-                tax=propertytax(erun,ZONEMAP(cat(1,lotchoice{:,2})));
+%                 tax=propertytax(erun,ZONEMAP(cat(1,lotchoice{inewlots,2})))';
+                tax=sum(((1/(1+discount)).^(1:30)).*paskh,2).*...
+                    propertytax(erun,ZONEMAP(cat(1,lotchoice{inewlots,2})))';
                 
                 [Upick,eucheck,wtp_pick,eu_base,eu_ins,wtp_base,wtp_ins]=...
                     calc_eu(eumdl,lccf,c_income,c_tc,c_dmg,c_iprate,c_good,...
@@ -3493,6 +3535,9 @@ for erun=1:EXPTRUNS
             % %Lottype=[id,location index,lotsize,housesize,ltype,ccost,amlevel,travelcost,buildtime,brokerid]
             % %lotchoice=[id,location index,ltype,occ/vac,consumer id,residence time,sell price,mitchoice]
             % %CONINFO=[income,searchtime,consumer_good,housesize,lotsize,proximity,subrisk,occ/vac,utility]
+            
+            TAXREV(t)=sum(sum(((1/(1+discount)).^(1:30)).*cat(1,lotchoice{ifilled,7})).*...
+                propertytax(erun,ZONEMAP(cat(1,lotchoice{ifilled,2})))');
             
             % update asking price for next period's housing market
 %             Paskhouse(istillvac)=cat(1,lotchoice{istillvac,7});
@@ -4025,7 +4070,8 @@ for erun=1:EXPTRUNS
             Exptprofit,Exptret,Realexptret,Realavgexptret,idealset,profset,...
             avgbrokervar,carrycost,Lottype,CONINFO,PREFMAP,IMPACT,DAMAGE,LANDINFO,...
             lotlocate,relocated,reloc_stats,conidmap,subjriskmap,stormoccur,...
-            LOTRENT,LOTCON,LOTINC,LOTINS,leave_stats,decisiondata,regmoveouts,vacantlist);
+            LOTRENT,LOTCON,LOTINC,LOTINS,leave_stats,decisiondata,regmoveouts,...
+            vacantlist,TAXREV);
         
         
     end

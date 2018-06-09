@@ -5,7 +5,7 @@
 %   model runs, extract targeted statistics, and compile those statistics
 %   for visualization and printing to output files (e.g., .csv, .xlsx).
 
-cd H:\'My Documents'\Model_Code\simple_chalms
+cd \\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\'My Documents'\Model_Code\CHALMS_coastal_simple\CHALMS_coastal_simple
 
 % Reproduce parameters from model so that resutls can be processed
 % independently from model runs
@@ -46,16 +46,16 @@ branges=[40000:16000:184000 200001];    % income distribution bins
 
 %%% Adjust this %% 
 % navigate to results file storage
-cd C:\Users\nrmagliocca\'Box Sync'\'Data Drive'\model_results\CHALMS_event_ilandscape_030617_rnd
+cd C:\Users\nrmagliocca\'Box Sync'\'Data Drive'\model_results\CHALMS_event_ilandscape_basetax
 fnames=dir;
 fnamescell=struct2cell(fnames);
 % (2) change the prefix of the results file names
 h=strncmp('coast_event_simple',fnamescell(1,:),18);
 hind=find(h==1);
 % add precalculated distance matrix
-cd cd H:\'My Documents'\Model_Code\simple_chalms
+cd \\asfs.asnet.ua-net.ua.edu\users$\home\nrmagliocca\'My Documents'\Model_Code\CHALMS_coastal_simple\CHALMS_coastal_simple
 load DIST2CBD_east
-cd C:\Users\nrmagliocca\'Box Sync'\'Data Drive'\model_results\CHALMS_event_ilandscape_030617_rnd
+cd C:\Users\nrmagliocca\'Box Sync'\'Data Drive'\model_results\CHALMS_event_ilandscape_basetax
 distpt=ceil(min(min(dist2cbd)):max(max(dist2cbd)));
 density=zeros(NLENGTH*NWIDTH,length(hind));
 
@@ -69,6 +69,8 @@ hmc=zeros(length(hind),TMAX);
 
 htprob_cross=cell(TMAX,length(hind));
 htentropy_cross=zeros(length(hind),TMAX);
+
+taxrevenue=zeros(length(hind),TMAX);
 
 LTmap=cell(TMAX,length(hind));
 AVGRENTmap=cell(TMAX,length(hind));
@@ -240,7 +242,8 @@ for mr=1:length(hind)   % MRUNS*EXPTRUNS
         'profset','avgbrokervar','carrycost','Lottype','CONINFO','PREFMAP',...
         'TSI','IMPACT','DAMAGE','LANDINFO','lotlocate','relocated',...
         'reloc_stats','stormoccur','conidmap','subjriskmap','stormoccur',...
-        'LOTRENT','LOTCON','LOTINC','LOTINS','leave_stats')
+        'LOTRENT','LOTCON','LOTINC','LOTINS','leave_stats','decisiondata',...
+        'regmoveouts','vacantlist','TAXREV')
 end
 %%
 % % Calculate housing stock evenness and build average development map
